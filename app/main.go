@@ -12,6 +12,11 @@ import (
 	"github.com/fatih/color"
 )
 
+const (
+	testDurationSeconds = 30 // Test duration in seconds
+	uiWidth            = 60 // Width of the UI elements
+)
+
 // Function to show clear screen
 func clearScreen() {
 	cmd := exec.Command("clear") // For Unix-based systems (Linux/macOS)
@@ -24,19 +29,26 @@ func clearScreen() {
 func showIntro() {
 	clearScreen()
 
-	// Define colors
-	cyan := color.New(color.FgCyan).Add(color.Underline)
+	cyan := color.New(color.FgCyan).Add(color.Bold)
 	yellow := color.New(color.FgYellow)
 	red := color.New(color.FgRed)
 
-	// Print the intro with colors
-	cyan.Println("====================================")
-	cyan.Println("        Welcome to MonkeyType CLI!")
-	cyan.Println("====================================")
-	yellow.Println("You will be shown random words to type.")
-	red.Println("Press 'R' to refresh the test or CTRL+C to exit.")
-	red.Println("Press Enter to start the typing test.")
+	fmt.Println(strings.Repeat("=", uiWidth))
+	cyan.Println(centerText("🐒 MonkeyType CLI 🐒", uiWidth))
+	fmt.Println(strings.Repeat("=", uiWidth))
+	
+	yellow.Println("\n" + centerText("Test Duration: 30 seconds", uiWidth))
+	yellow.Println(centerText("Type as many words as you can!", uiWidth))
+	fmt.Println()
+	red.Println(centerText("Press 'R' to refresh | CTRL+C to exit", uiWidth))
+	red.Println(centerText("Press Enter to start...", uiWidth))
 	fmt.Scanln()
+}
+
+// Add this helper function for centering text
+func centerText(text string, width int) string {
+	padding := (width - len(text)) / 2
+	return strings.Repeat(" ", padding) + text
 }
 
 // Function to generate a random sentence using random words
@@ -61,55 +73,115 @@ func calculateSpeedAndAccuracy(start time.Time, typedText, originalText string) 
 	duration := time.Since(start)
 	wordsTyped := float64(len(strings.Fields(typedText)))
 	secondsTaken := duration.Seconds()
+	
+	// Handle the case where no input was provided (time's up)
+	if typedText == "" {
+		wordsTyped = 0
+		secondsTaken = float64(testDurationSeconds)
+	}
+	
 	wpm := (wordsTyped / secondsTaken) * 60
 
-	// Calculate accuracy
 	var correctChars, totalChars int
-	for i := 0; i < len(typedText) && i < len(originalText); i++ {
-		if typedText[i] == originalText[i] {
-			correctChars++
+	if typedText != "" {
+		for i := 0; i < len(typedText) && i < len(originalText); i++ {
+			if typedText[i] == originalText[i] {
+				correctChars++
+			}
+			totalChars++
 		}
-		totalChars++
 	}
 
-	accuracy := (float64(correctChars) / float64(totalChars)) * 100
+	accuracy := 0.0
+	if totalChars > 0 {
+		accuracy = (float64(correctChars) / float64(totalChars)) * 100
+	}
 
 	clearScreen()
+	green := color.New(color.FgGreen).Add(color.Bold)
+	yellow := color.New(color.FgYellow)
 
-	// Define color for results
-	green := color.New(color.FgGreen) // Declare green color
+	fmt.Println(strings.Repeat("=", uiWidth))
+	green.Println(centerText("🎯 Results 🎯", uiWidth))
+	fmt.Println(strings.Repeat("=", uiWidth))
+	yellow.Printf("\n%s\n", centerText(fmt.Sprintf("Speed: %.0f WPM", wpm), uiWidth))
+	yellow.Printf("%s\n", centerText(fmt.Sprintf("Accuracy: %.1f%%", accuracy), uiWidth))
+	fmt.Println(strings.Repeat("=", uiWidth))
+}
 
-	// Print results with colors
-	green.Printf("\n====================================\n")
-	green.Printf("Typing Speed: %.2f words per minute (WPM)\n", wpm)
-	green.Printf("Accuracy: %.2f%%\n", accuracy)
-	green.Printf("\n====================================\n")
+// Add this function to manage cursor position
+func moveCursorToInput() {
+	// Move cursor to input line (6 lines from bottom)
+	fmt.Print("\033[6A")  // Move up 6 lines
+	fmt.Print("\033[2K")  // Clear the line
+}
+
+// Update the displayTimer function
+func displayTimer(remainingSeconds int) {
+	cyan := color.New(color.FgCyan).Add(color.Bold)
+	
+	// Save cursor position
+	currentPos := "\033[s"
+	// Restore cursor position
+	restorePos := "\033[u"
+	
+	fmt.Print(currentPos)
+	fmt.Print("\033[H") // Move to top
+	fmt.Print("\033[2K") // Clear line
+	timerBar := fmt.Sprintf("Time: %02d seconds", remainingSeconds)
+	cyan.Println(centerText(timerBar, uiWidth))
+	fmt.Print(restorePos)
 }
 
 // Function to start the typing test
 func startTest() {
-	// Generate a random sentence to type
+	clearScreen()
 	sentence := getRandomSentence()
 
-	// Define colors
 	blue := color.New(color.FgBlue)
-	green := color.New(color.FgGreen) // Declare green color
+	green := color.New(color.FgGreen)
 
-	// Display sentence to type with colors
-	blue.Println("\nYour sentence to type: ")
+	// Create channels for timer and input
+	timerDone := make(chan bool)
+	inputDone := make(chan string)
+	
+	fmt.Println(strings.Repeat("=", uiWidth))
+	blue.Println("\nType this:")
 	green.Println(sentence)
+	fmt.Println("\nYour input:")
+	fmt.Print("> ") // Add a prompt
+	
+	// Start the timer in a goroutine
+	go func() {
+		for i := testDurationSeconds; i >= 0; i-- {
+			displayTimer(i)
+			if i == 0 {
+				timerDone <- true
+				return
+			}
+			time.Sleep(time.Second)
+		}
+	}()
 
-	// Record the start time
+	// Start getting input in a goroutine
+	go func() {
+		reader := bufio.NewReader(os.Stdin)
+		input, _ := reader.ReadString('\n')
+		input = strings.TrimSpace(input)
+		inputDone <- input
+	}()
+
+	// Wait for either timer completion or user input
 	startTime := time.Now()
-
-	// Get user input
-	fmt.Println("\nStart typing:")
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	typedText := scanner.Text()
-
-	// Calculate typing speed and accuracy
-	calculateSpeedAndAccuracy(startTime, typedText, sentence)
+	select {
+	case <-timerDone:
+		moveCursorToInput()
+		fmt.Println("\n\nTime's up!")
+		time.Sleep(time.Second)
+		calculateSpeedAndAccuracy(startTime, "", sentence)
+	case typedText := <-inputDone:
+		calculateSpeedAndAccuracy(startTime, typedText, sentence)
+	}
 }
 
 // Handle key press to refresh

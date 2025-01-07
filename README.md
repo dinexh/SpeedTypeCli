@@ -1,4 +1,4 @@
- ## SpeedTypeCLI 🚀
+## SpeedTypeCLI 🚀
 
 A lightweight, terminal-based typing speed test application. Test and improve your typing speed directly from your command line!
 
@@ -10,7 +10,7 @@ A lightweight, terminal-based typing speed test application. Test and improve yo
   - **Accuracy Tracking:** Provides precise feedback on your typing.
 - **Color-coded Feedback:**
   - 🟢 **Green:** Correctly typed words.
-  - 🟡 **Yellow:** The word you’re currently typing.
+  - 🟡 **Yellow:** The word you're currently typing.
   - ⚪ **White:** Upcoming words.
 - **Celebratory Confetti Animation:** Celebrate your achievement upon test completion.
 - **Common Words Dictionary:** Tests use a curated set of English words.
@@ -19,41 +19,41 @@ A lightweight, terminal-based typing speed test application. Test and improve yo
 
 ## Requirements 📋
 
-- **Python 3.6+**: Ensure you have Python installed.
-- **curses**: Included in the standard library for Unix-based systems. For Windows users, the `windows-curses` package is required.
+- **Go 1.20+**: Ensure you have Go installed on your system.
 
 ## Installation 🛠️
 
-### Clone the Repository:
+### Option 1: Install using Go
 
 ```bash
-git clone https://github.com/yourusername/SpeedTypeCLI.git
-cd SpeedTypeCLI
+go install github.com/dineshkorukonda/SpeedTypeCli@latest
 ```
 
-### Install Requirements:
-
-For Unix-based systems:
+After installation, you can run the application directly using:
 
 ```bash
-python3 -m pip install -r requirements.txt
+SpeedTypeCli
 ```
 
-For Windows users, install `windows-curses`:
+### Option 2: Build from Source
+
+1. Clone the Repository:
 
 ```bash
-python -m pip install windows-curses
+git clone https://github.com/dineshkorukonda/SpeedTypeCli.git
+cd SpeedTypeCli
 ```
 
-### Run the Application:
+2. Build and Run:
 
 ```bash
-python speedtypecli.py
+go build
+./SpeedTypeCli
 ```
 
 ## Usage 🖥️
 
-1. Launch the application using the command above.
+1. Launch the application using one of the commands above.
 2. Type the displayed words as quickly and accurately as possible.
 3. View your real-time performance metrics (WPM and accuracy).
 4. Celebrate your results with confetti upon completion!
@@ -61,7 +61,7 @@ python speedtypecli.py
 
 ## Contribution 🤝
 
-We welcome contributions to make **SpeedTypeCLI** even better! Feel free to submit issues or pull requests on [GitHub](https://github.com/yourusername/SpeedTypeCLI).
+We welcome contributions to make **SpeedTypeCli** even better! Feel free to submit issues or pull requests on [GitHub](https://github.com/dineshkorukonda/SpeedTypeCli).
 
 ## License 📜
 
@@ -69,4 +69,4 @@ This project is licensed under the **MIT License**. See the `LICENSE` file for d
 
 ---
 
-Enjoy improving your typing skills with **SpeedTypeCLI**! 🚀
+Enjoy improving your typing skills with **SpeedTypeCli**! 🚀
